@@ -1,0 +1,83 @@
+import { prisma } from '@/lib/prisma'
+import { addProduct, toggleProductStock } from './actions'
+
+export default async function ProductsPage() {
+  const products = await prisma.product.findMany({
+    orderBy: { id: 'asc' }
+  })
+
+  return (
+    <div>
+      <h1 className="text-2xl font-semibold text-gray-900 mb-6">Product Management</h1>
+      
+      {/* Add Product Form */}
+      <div className="bg-white shadow sm:rounded-lg mb-8 p-6">
+        <h2 className="text-lg font-medium text-gray-900 mb-4">Add New Product</h2>
+        <form action={addProduct} className="space-y-4 sm:flex sm:space-y-0 sm:space-x-4 items-end">
+          <div className="flex-grow">
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
+            <input type="text" name="name" id="name" required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+          </div>
+          <div>
+            <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price</label>
+            <input type="number" name="price" id="price" required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+          </div>
+          <div>
+            <label htmlFor="calories" className="block text-sm font-medium text-gray-700">Kcal</label>
+            <input type="number" name="calories" id="calories" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+          </div>
+          <div>
+            <label htmlFor="alcoholContent" className="block text-sm font-medium text-gray-700">Alc (mg)</label>
+            <input type="number" step="0.1" name="alcoholContent" id="alcoholContent" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+          </div>
+          <div className="flex-grow">
+            <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">Image URL</label>
+            <input type="text" name="imageUrl" id="imageUrl" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" placeholder="https://..." />
+          </div>
+          <button type="submit" className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            Add
+          </button>
+        </form>
+      </div>
+
+      {/* Product List */}
+      <div className="bg-white shadow overflow-hidden sm:rounded-md">
+        <ul className="divide-y divide-gray-200">
+          {products.map((product) => (
+            <li key={product.id} className="px-4 py-4 sm:px-6 flex items-center justify-between">
+              <div className="flex items-center">
+                {product.imageUrl && (
+                  <img src={product.imageUrl} alt={product.name} className="h-10 w-10 rounded-full mr-4 object-cover" />
+                )}
+                <div>
+                  <p className="text-sm font-medium text-indigo-600 truncate">{product.name}</p>
+                  <p className="flex items-center text-sm text-gray-500">
+                    ¥{product.price.toLocaleString()}
+                    {product.calories !== null && <span className="ml-2 text-xs">🔥 {product.calories} kcal</span>}
+                    {product.alcoholContent !== null && product.alcoholContent > 0 && <span className="ml-2 text-xs">🍷 {product.alcoholContent} mg</span>}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <a href={`/admin/products/${product.id}`} className="text-gray-400 hover:text-indigo-600">
+                  <span className="sr-only">Edit</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                  </svg>
+                </a>
+                <form action={toggleProductStock.bind(null, product.id, !product.isSoldOut)}>
+                  <button 
+                    type="submit"
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${product.isSoldOut ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}
+                  >
+                    {product.isSoldOut ? 'Sold Out' : 'In Stock'}
+                  </button>
+                </form>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
