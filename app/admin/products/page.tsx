@@ -31,8 +31,12 @@ export default async function ProductsPage() {
             <input type="number" step="0.1" name="alcoholContent" id="alcoholContent" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
           </div>
           <div className="flex-grow">
-            <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">Image URL</label>
-            <input type="text" name="imageUrl" id="imageUrl" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" placeholder="https://..." />
+            <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">Image (URL or File)</label>
+            <div className="space-y-2">
+                <input type="text" name="imageUrl" id="imageUrl" className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" placeholder="https://..." />
+                <div className="text-xs text-center text-gray-500">- OR -</div>
+                <input type="file" name="imageFile" accept="image/*" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
+            </div>
           </div>
           <button type="submit" className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
             Add
