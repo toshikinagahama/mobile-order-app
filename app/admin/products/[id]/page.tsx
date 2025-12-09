@@ -56,22 +56,21 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
                 />
               </div>
               
-               <div>
-                 <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
-                 <select 
-                   name="category" 
-                   id="category" 
-                   disabled // Category editing not requested yet, keeping safety
-                   defaultValue={product.category}
-                   className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 text-gray-500"
-                 >
-                   <option value="Drink">Drink</option>
-                   <option value="Food">Food</option>
-                   <option value="Dessert">Dessert</option>
-                 </select>
-                 <p className="text-xs text-gray-400 mt-1">Category cannot be changed currently</p>
-               </div>
-          </div>
+               <div className="mb-4">
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
+            <select name="category" id="category" defaultValue={product.category} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+                {existingCategories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                ))}
+            </select>
+            <input 
+                type="text" 
+                name="newCategory" 
+                placeholder="Or create new (overrides select)..." 
+                className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-gray-50" 
+            />
+        </div>
+       </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -94,6 +93,19 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
                     defaultValue={product.alcoholContent ?? ''}
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" 
                 />
+            </div>
+          </div>
+
+
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="unit" className="block text-sm font-medium text-gray-700">Unit</label>
+              <input type="text" name="unit" id="unit" defaultValue={product.unit} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+            </div>
+            <div>
+              <label htmlFor="quantityStep" className="block text-sm font-medium text-gray-700">Step</label>
+              <input type="number" name="quantityStep" id="quantityStep" defaultValue={product.quantityStep} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
             </div>
           </div>
 

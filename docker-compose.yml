@@ -1,0 +1,30 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL:-http://localhost:3001}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./prisma/dev.db:/app/prisma/dev.db
+    restart: always
+
+  socket:
+    build:
+      context: .
+      dockerfile: Dockerfile.socket
+    ports:
+      - "3001:3001"
+    restart: always
+
+  printer:
+    build:
+      context: .
+      dockerfile: Dockerfile.printer
+    environment:
+      - SOCKET_SERVER_URL=http://socket:3001
+    depends_on:
+      - socket
+    restart: always

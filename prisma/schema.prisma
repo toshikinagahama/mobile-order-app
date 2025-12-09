@@ -19,6 +19,8 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   orderItems  OrderItem[]
+  unit        String   @default("点") // e.g., "点", "g", "ml"
+  quantityStep Int     @default(1)    // e.g., 1, 100 (for 100g)
 }
 
 model Table {

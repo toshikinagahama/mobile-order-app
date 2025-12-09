@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { completeOrder, finishSession } from './actions'
+import FinishSessionButton from './components/FinishSessionButton'
 
 export default async function TablePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -48,14 +49,7 @@ export default async function TablePage({ params }: { params: Promise<{ id: stri
             <div className="flex justify-between items-center border-t pt-4">
               <span className="font-bold text-xl">Total: ¥{activeOrder.items.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}</span>
               <div className="flex space-x-2">
-                 {/* Only allow Mark as Paid when pure pending if we want manual flow, but usually just finish session is enough if payment is done at register */}
-                 {/* The user wants "Payment Finished" (Admin) -> Reset Table */}
-                 
-                 <form action={finishSession.bind(null, activeOrder.id)}>
-                    <button type="submit" className="bg-green-600 text-white px-5 py-2 rounded font-bold hover:bg-green-700 shadow flex items-center">
-                      <span className="mr-1">✓</span> 会計終了 (Finish & Reset)
-                    </button>
-                 </form>
+                 <FinishSessionButton orderId={activeOrder.id} tableId={table.id} />
               </div>
             </div>
           </div>

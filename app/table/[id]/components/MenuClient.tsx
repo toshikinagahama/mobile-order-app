@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { placeOrder, requestBill } from '../actions'
+import { socket } from '@/lib/socket'
+import { useRouter } from 'next/navigation'
 
 type Product = {
   id: number
@@ -12,6 +14,8 @@ type Product = {
   calories: number | null
   alcoholContent: number | null
   isSoldOut: boolean
+  unit: string
+  quantityStep: number
 }
 
 export default function MenuClient({ 
@@ -25,16 +29,49 @@ export default function MenuClient({
 }) {
   const [cart, setCart] = useState<Record<number, number>>({})
   const [isCartOpen, setIsCartOpen] = useState(false)
-  const [selectedCategory, setSelectedCategory] = useState<string>('Drink')
+  const [selectedCategory, setSelectedCategory] = useState<string>('ドリンク')
   const [billRequested, setBillRequested] = useState(initialBillRequested)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const router = useRouter()
+
+  useEffect(() => {
+    // Connect to socket
+    if (!socket.connected) {
+        socket.connect()
+    }
+
+    // Join table room
+    socket.emit('join_room', `table_${tableId}`)
+
+    // Listen for force refresh (table reset)
+    socket.on('force_refresh', () => {
+        alert('会計が終了しました。トップページへ戻ります。')
+        router.push('/')
+        router.refresh()
+    })
+
+    return () => {
+        socket.off('force_refresh')
+        // We don't necessarily disconnect here to keep connection alive if navigating within app, 
+        // but for this specific page it's fine.
+        // socket.disconnect() 
+    }
+  }, [tableId, router])
 
   const categories = Array.from(new Set(products.map(p => p.category)))
-  
-  // Custom sort order for categories
-  const categoryOrder = ['Drink', 'Food', 'Dessert']
+  const categoryOrder = ['ドリンク', 'アルコール', 'スピード', 'おつまみ', '野菜', '肉', '魚', 'お米', '麺', 'デザート']
   categories.sort((a, b) => {
-    return categoryOrder.indexOf(a) - categoryOrder.indexOf(b)
+    const indexA = categoryOrder.indexOf(a)
+    const indexB = categoryOrder.indexOf(b)
+    // If both are in the known list, sort by index
+    if (indexA !== -1 && indexB !== -1) return indexA - indexB
+    // If only A is known, it comes first
+    if (indexA !== -1) return -1
+    // If only B is known, it comes first
+    if (indexB !== -1) return 1
+    // Otherwise alphabetical
+    return a.localeCompare(b)
   })
 
   // Sync with prop if it changes (revalidation)
@@ -75,6 +112,7 @@ export default function MenuClient({
       quantity
     }))
     await placeOrder(tableId, items)
+    socket.emit('order_placed', { tableId, type: 'order' })
     setCart({})
     setIsCartOpen(false)
     alert('注文が完了しました！')
@@ -83,6 +121,7 @@ export default function MenuClient({
   const handleRequestBill = async () => {
     if (confirm('お会計をお願いしますか？')) {
       await requestBill(tableId)
+      socket.emit('order_placed', { tableId, type: 'bill_request' })
       setBillRequested(true)
       setShowSuccessModal(true)
       // Auto close success modal after 3 seconds
@@ -115,11 +154,13 @@ export default function MenuClient({
                       <p className="text-sm text-gray-500">¥{product!.price.toLocaleString()}</p>
                     </div>
                   </div>
-                  <div className="flex items-center bg-gray-100 rounded-lg p-1">
-                    <button onClick={() => removeFromCart(product!.id)} className="w-8 h-8 flex items-center justify-center text-gray-600 font-bold">-</button>
-                    <span className="mx-2 font-medium w-4 text-center">{quantity}</span>
-                    <button onClick={() => addToCart(product!.id)} className="w-8 h-8 flex items-center justify-center text-orange-600 font-bold">+</button>
-                  </div>
+                    <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                     <button onClick={() => removeFromCart(product!.id)} className="w-8 h-8 flex items-center justify-center text-gray-600 font-bold">-</button>
+                     <span className="mx-2 font-medium min-w-[3rem] text-center">
+                        {quantity * product!.quantityStep}{product!.unit}
+                     </span>
+                     <button onClick={() => addToCart(product!.id)} className="w-8 h-8 flex items-center justify-center text-orange-600 font-bold">+</button>
+                   </div>
                 </li>
               ))}
             </ul>
@@ -142,25 +183,60 @@ export default function MenuClient({
     )
   }
 
+  // ... (inside component)
+  // Placeholder for where hook used to be
+
+  // ...
+
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-[calc(100vh-4rem)] relative">
+      {/* Mobile Hamburger Button */}
+      {!isSidebarOpen && (
+        <button 
+            onClick={() => setIsSidebarOpen(true)}
+            className="md:hidden absolute top-4 left-4 z-30 bg-white p-2 rounded-full shadow-lg text-orange-500"
+        >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+      )}
+
+      {/* Sidebar Overlay (Mobile) */}
+      {isSidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden" onClick={() => setIsSidebarOpen(false)}></div>
+      )}
+
       {/* Sidebar */}
-      <div className="w-24 bg-gray-100 overflow-y-auto border-r border-gray-200 flex-shrink-0">
-        <ul className="py-2">
+      <div className={`
+          fixed inset-y-0 left-0 z-50 w-64 bg-gray-100 border-r border-gray-200 transform transition-transform duration-300 ease-in-out
+          md:relative md:translate-x-0 md:w-24 md:block
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+         {/* Mobile Close Button */}
+         <div className="md:hidden p-4 flex justify-end">
+             <button onClick={() => setIsSidebarOpen(false)} className="text-gray-500">
+                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                 </svg>
+             </button>
+         </div>
+
+        <ul className="py-2 overflow-y-auto h-full">
           {categories.map(category => (
             <li key={category}>
               <button
-                onClick={() => setSelectedCategory(category)}
-                className={`w-full py-4 px-1 text-center text-sm font-medium transition-colors ${
+                onClick={() => {
+                    setSelectedCategory(category)
+                    setIsSidebarOpen(false)
+                }}
+                className={`w-full py-4 px-4 md:px-1 text-left md:text-center text-base md:text-sm font-medium transition-colors border-l-4 ${
                   selectedCategory === category 
-                    ? 'bg-white text-orange-600 border-l-4 border-orange-500 shadow-sm' 
-                    : 'text-gray-500 hover:bg-gray-50'
+                    ? 'bg-white text-orange-600 border-orange-500 shadow-sm' 
+                    : 'text-gray-500 hover:bg-gray-50 border-transparent'
                 }`}
               >
-                {category === 'Drink' && 'ドリンク'}
-                {category === 'Food' && 'お料理'}
-                {category === 'Dessert' && 'デザート'}
-                {!['Drink', 'Food', 'Dessert'].includes(category) && category}
+                {category}
               </button>
             </li>
           ))}
@@ -168,12 +244,10 @@ export default function MenuClient({
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 pb-24">
+      <div className="flex-1 overflow-y-auto bg-gray-50 pb-24 md:pl-0">
         <div className="p-4">
           <h2 className="text-xl font-bold text-gray-800 mb-4">
-             {selectedCategory === 'Drink' && 'ドリンク'}
-             {selectedCategory === 'Food' && 'お料理'}
-             {selectedCategory === 'Dessert' && 'デザート'}
+             {categoryOrder.includes(selectedCategory) ? selectedCategory : 'その他'}
           </h2>
           <div className="grid grid-cols-1 gap-4">
             {filteredProducts.map(product => (
@@ -186,7 +260,12 @@ export default function MenuClient({
                 <div className="flex-1 flex flex-col justify-between py-1">
                     <div>
                       <h3 className="font-bold text-lg text-gray-800 leading-tight mb-1">{product.name}</h3>
-                      <p className="text-orange-600 font-bold">¥{product.price.toLocaleString()}</p>
+                      <p className="text-orange-600 font-bold">
+                        ¥{product.price.toLocaleString()} 
+                        <span className="text-sm text-gray-500 font-normal ml-1">
+                            / {product.quantityStep}{product.unit}
+                        </span>
+                      </p>
                       <div className="text-xs text-gray-500 mt-1">
                         {product.calories !== null && <span className="mr-2">🔥 {product.calories} kcal</span>}
                         {product.alcoholContent !== null && product.alcoholContent > 0 && <span>🍷 {product.alcoholContent} mg</span>}
@@ -200,7 +279,9 @@ export default function MenuClient({
                       {cart[product.id] ? (
                         <div className="flex items-center bg-orange-50 rounded-full border border-orange-200 shadow-sm">
                           <button onClick={() => removeFromCart(product.id)} className="w-8 h-8 flex items-center justify-center text-gray-600 font-bold hover:bg-orange-100 rounded-full transition-colors">-</button>
-                          <span className="px-2 font-bold text-gray-800 min-w-[1.5rem] text-center">{cart[product.id]}</span>
+                          <span className="px-2 font-bold text-gray-800 min-w-[3rem] text-center">
+                            {cart[product.id] * product.quantityStep}{product.unit}
+                          </span>
                           <button onClick={() => addToCart(product.id)} className="w-8 h-8 flex items-center justify-center text-orange-600 font-bold hover:bg-orange-100 rounded-full transition-colors">+</button>
                         </div>
                       ) : (

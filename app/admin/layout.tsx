@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import AdminSocketListener from './components/AdminSocketListener'
 
 export default function AdminLayout({
   children,
@@ -28,7 +29,8 @@ export default function AdminLayout({
       </nav>
       <main className="py-10">
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          {children}
+            <AdminSocketListener />
+            {children}
         </div>
       </main>
     </div>

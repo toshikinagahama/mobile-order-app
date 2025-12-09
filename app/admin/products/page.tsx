@@ -1,10 +1,13 @@
 import { prisma } from '@/lib/prisma'
 import { addProduct, toggleProductStock } from './actions'
+import DeleteProductButton from './DeleteProductButton'
 
 export default async function ProductsPage() {
   const products = await prisma.product.findMany({
     orderBy: { id: 'asc' }
   })
+  
+  const existingCategories = Array.from(new Set(products.map(p => p.category))).sort()
 
   return (
     <div>
@@ -29,6 +32,28 @@ export default async function ProductsPage() {
           <div>
             <label htmlFor="alcoholContent" className="block text-sm font-medium text-gray-700">Alc (mg)</label>
             <input type="number" step="0.1" name="alcoholContent" id="alcoholContent" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+          </div>
+          <div>
+            <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
+            <select name="category" id="category" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+              {existingCategories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+            <input 
+                type="text" 
+                name="newCategory" 
+                placeholder="Or create new..." 
+                className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-gray-50" 
+            />
+          </div>
+          <div>
+            <label htmlFor="unit" className="block text-sm font-medium text-gray-700">Unit</label>
+            <input type="text" name="unit" id="unit" placeholder="点" defaultValue="点" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+          </div>
+          <div>
+            <label htmlFor="quantityStep" className="block text-sm font-medium text-gray-700">Step</label>
+            <input type="number" name="quantityStep" id="quantityStep" defaultValue="1" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
           </div>
           <div className="flex-grow">
             <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">Image (URL or File)</label>
@@ -77,6 +102,7 @@ export default async function ProductsPage() {
                     {product.isSoldOut ? 'Sold Out' : 'In Stock'}
                   </button>
                 </form>
+                <DeleteProductButton id={product.id} />
               </div>
             </li>
           ))}

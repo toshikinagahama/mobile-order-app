@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mobile Order App
+
+A real-time mobile ordering system built with Next.js, Bun, and Socket.io.
 
 ## Getting Started
 
-First, run the development server:
+### Development
 
+Run the development server:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+bun run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Production
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Build and start for production:
+```bash
+bun run build
+bun run start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## System Architecture
 
-## Learn More
+### Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+-   **Frontend**: Next.js (App Router), TypeScript, Tailwind CSS (PostCSS v4), Socket.io Client
+-   **Backend**: Bun Runtime, Custom Server (`server.ts`) using Express + Next.js + Socket.io
+-   **Database**: SQLite (`prisma/dev.db`), Prisma ORM
+-   **Real-time**: WebSocket (Socket.io) for order updates andadmin notifications
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Directory Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+-   `app/admin`: Admin dashboard (Product management, Order history)
+-   `app/table`: User ordering interface
+-   `lib/`: Utilities (Prisma client, Socket configurations)
+-   `prisma/`: Database schema and seed scripts
+-   `server.ts`: Custom server entry point
 
-## Deploy on Vercel
+### Architecture Diagram
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```mermaid
+graph TD
+    subgraph Client ["Client Side"]
+        User["User Device (Mobile)"]
+        Admin["Admin Dashboard (PC/Tablet)"]
+    end
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+    subgraph Server ["Server Side (Bun)"]
+        CustomServer["Custom Server (server.ts)"]
+        NextApp["Next.js App (App Router)"]
+        SocketServer["Socket.io Server"]
+    end
+
+    subgraph Database ["Data Layer"]
+        SQLite[("SQLite Database")]
+        Prisma["Prisma ORM"]
+    end
+
+    User -->|HTTP Requests| NextApp
+    Admin -->|HTTP Requests| NextApp
+    
+    User <-->|WebSocket (Order Placed)| SocketServer
+    Admin <-->|WebSocket (Order Notification)| SocketServer
+    
+    CustomServer --> NextApp
+    CustomServer --> SocketServer
+    
+    NextApp -->|Query/Mutate| Prisma
+    Prisma -->|Read/Write| SQLite
+```
