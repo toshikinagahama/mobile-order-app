@@ -15,9 +15,10 @@ export default async function EditProductPage({ params }: { params: Promise<{ id
     where: { id: productId }
   })
 
-  if (!product) {
-    return <div>Product not found</div>
-  }
+  if (!product) return <div>Product not found</div>
+
+  const allProducts = await prisma.product.findMany({ select: { category: true } })
+  const existingCategories = Array.from(new Set(allProducts.map(p => p.category))).sort()
 
   return (
     <div>
