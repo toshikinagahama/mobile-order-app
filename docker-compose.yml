@@ -3,28 +3,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_SOCKET_URL: ${NEXT_PUBLIC_SOCKET_URL:-http://localhost:3001}
+    # Environment variables are mostly default in code or .env, but let's keep DB_URL explicit if needed
+    environment:
+      - DATABASE_URL=file:./prisma/dev.db
     ports:
       - "3000:3000"
     volumes:
-      - ./prisma/dev.db:/app/prisma/dev.db
-    restart: always
-
-  socket:
-    build:
-      context: .
-      dockerfile: Dockerfile.socket
-    ports:
-      - "3001:3001"
-    restart: always
-
-  printer:
-    build:
-      context: .
-      dockerfile: Dockerfile.printer
-    environment:
-      - SOCKET_SERVER_URL=http://socket:3001
-    depends_on:
-      - socket
+      - ./prisma:/app/prisma
     restart: always

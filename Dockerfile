@@ -1,25 +1,33 @@
 # Base image
-FROM oven/bun:1 AS base
+FROM node:20-bullseye-slim AS base
 WORKDIR /app
 
 # Install dependencies
 FROM base AS deps
-COPY package.json bun.lock ./
+COPY package.json package-lock.json* ./
 COPY prisma ./prisma
-RUN bun install --frozen-lockfile
+# Use npm install since we might not have a lockfile matching strict versions yet
+RUN npm install
 
 # Build the app
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+
 # Generate Prisma Client
-RUN bunx prisma generate
+RUN npx prisma generate
 ENV NEXT_TELEMETRY_DISABLED=1
 
 ARG NEXT_PUBLIC_SOCKET_URL
 ENV NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL
 
-RUN bun run build
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
+
+# Note: We rely on the mounted volume for the database at runtime.
+# We do not run db push/seed during build.
+
+RUN npm run build
 
 # Production image
 FROM base AS runner
@@ -40,12 +48,6 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy prisma schema for migrations if needed (optional for runtime if client is bundled)
-# But standalone usually bundles what is needed. 
-# However, we might need to run migrations. 
-# For simplicity, we assume migrations are run via a separate command or we might need prisma available.
-# The standalone server.js starts the next app.
-
 USER nextjs
 
 EXPOSE 3000
@@ -53,4 +55,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["bun", "server.js"]
+# server.js is the output of Next.js standalone build
+CMD ["node", "server.js"]

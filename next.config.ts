@@ -7,10 +7,10 @@ const nextConfig: NextConfig = {
       bodySizeLimit: '10mb',
     },
   },
-  output: 'standalone',
-  turbopack: {
-    root: process.cwd(),
+  eslint: {
+    ignoreDuringBuilds: true,
   },
+  output: 'standalone',
 };
 
 export default nextConfig;

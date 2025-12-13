@@ -1,24 +1,20 @@
 'use client'
 
 import { finishSession } from '../actions'
-import { socket } from '@/lib/socket'
+// import { socket } from '@/lib/socket'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+// import { useEffect } from 'react'
 
 export default function FinishSessionButton({ orderId, tableId }: { orderId: number, tableId: number }) {
     const router = useRouter()
-
-    useEffect(() => {
-        if (!socket.connected) socket.connect()
-    }, [])
 
     const handleFinish = async () => {
         if (!confirm('会計を終了し、テーブルをリセットしますか？')) return
 
         await finishSession(orderId)
         
-        // Emit reset event to notify customer info logic
-        socket.emit('reset_table', { tableId })
+        // Socket emit removed
+        // socket.emit('reset_table', { tableId })
         
         // Refresh admin page
         router.refresh()

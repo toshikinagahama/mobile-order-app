@@ -1,6 +1,5 @@
-
 import { prisma } from '@/lib/prisma'
-import { updateProduct } from '../actions'
+import { updateProduct } from '@/app/admin/products/actions'
 import { redirect } from 'next/navigation'
 
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {

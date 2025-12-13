@@ -1,2 +1,3 @@
-python-socketio[client]
+# python-socketio[client] removed, using standard sqlite3
+requests
 requests

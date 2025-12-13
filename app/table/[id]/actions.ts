@@ -52,6 +52,23 @@ export async function placeOrder(tableId: number, items: { productId: number; qu
     data: { totalAmount: total }
   })
 
+  // Create Print Job
+  const table = await prisma.table.findUnique({ where: { id: tableId } })
+  const newItemsDetails = orderItemsData.map(item => {
+    const p = products.find(p => p.id === item.productId)
+    return { name: p?.name || 'Unknown', quantity: item.quantity }
+  })
+
+  await prisma.printJob.create({
+    data: {
+      type: 'ORDER',
+      payload: JSON.stringify({
+        tableName: table?.name || `Table ${tableId}`,
+        items: newItemsDetails
+      })
+    }
+  })
+
   revalidatePath(`/table/${tableId}`)
   revalidatePath('/admin')
 }
@@ -66,6 +83,18 @@ export async function requestBill(tableId: number) {
       where: { id: order.id },
       data: { status: 'BILL_REQUESTED' }
     })
+
+    // Create Print Job
+    const table = await prisma.table.findUnique({ where: { id: tableId } })
+    await prisma.printJob.create({
+      data: {
+        type: 'BILL',
+        payload: JSON.stringify({
+          tableName: table?.name || `Table ${tableId}`
+        })
+      }
+    })
+
     revalidatePath(`/table/${tableId}`)
     revalidatePath('/admin')
   }

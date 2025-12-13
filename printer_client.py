@@ -1,37 +1,93 @@
-import socketio
+import time
+import sqlite3
+import datetime
 
-# Create a Socket.IO client instance
-sio = socketio.Client()
+import os
 
-@sio.event
-def connect():
-    print('Connected to Socket Server')
-    sio.emit('join_room', 'admin') # Join admin room just in case, or listen to global broadcasts
+# Configuration
+# Determine DB path dynamically to work both in Docker and locally
+if os.path.exists('/app/prisma/dev.db'):
+    DB_PATH = '/app/prisma/dev.db'
+else:
+    # Fallback to local path relative to this script
+    DB_PATH = os.path.join(os.path.dirname(__file__), 'prisma/dev.db')
 
-@sio.event
-def connect_error(data):
-    print("The connection failed!")
+POLL_INTERVAL = 1  # seconds
 
-@sio.event
-def disconnect():
-    print('Disconnected from server')
+def get_db_connection():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
-@sio.on('print_order')
-def on_print_order(data):
-    print('--- NEW ORDER RECEIVED ---')
-    print(f"Table ID: {data.get('tableId')}")
-    items = data.get('items', [])
+import json
+
+def poll_for_jobs():
+    conn = get_db_connection()
+    try:
+        # Enable WAL
+        conn.execute('PRAGMA journal_mode=WAL;')
+        
+        cursor = conn.cursor()
+        
+        # Fetch unprinted jobs
+        query = "SELECT id, type, payload, createdAt FROM PrintJob WHERE isPrinted = 0 ORDER BY id ASC"
+        cursor.execute(query)
+        jobs = cursor.fetchall()
+        
+        if jobs:
+            print(f"--- Found {len(jobs)} new jobs ---")
+            
+            for job in jobs:
+                job_id = job['id']
+                job_type = job['type']
+                payload_str = job['payload']
+                created_at = job['createdAt']
+                
+                try:
+                    payload = json.loads(payload_str)
+                    table_name = payload.get('tableName', 'Unknown Table')
+                    
+                    if job_type == 'ORDER':
+                        print_order_ticket(table_name, payload.get('items', []), created_at)
+                    elif job_type == 'BILL':
+                        print_bill_request(table_name, created_at)
+                    else:
+                        print(f"[Unknown Job Type] {job_type}: {payload}")
+                        
+                    # Mark as printed
+                    conn.execute("UPDATE PrintJob SET isPrinted = 1 WHERE id = ?", (job_id,))
+                    conn.commit()
+                    
+                except json.JSONDecodeError:
+                    print(f"Error decoding payload for job {job_id}")
+                except Exception as e:
+                    print(f"Error processing job {job_id}: {e}")
+
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+    finally:
+        conn.close()
+
+def print_order_ticket(table_name, items, timestamp):
+    print("==========================")
+    print("      NEW ORDER")
+    print(f"Table: {table_name}")
+    print(f"Time: {timestamp}")
+    print("--------------------------")
     for item in items:
-        # Check structure: might be { productId, quantity } or hydrated
-        # Ideally, we should fetch product details or send them from frontend
-        print(f" - Product ID: {item.get('productId')}, Qty: {item.get('quantity')}")
-    print('--------------------------')
-    # Here you would add the thermal printer code (e.g., using python-escpos)
+        print(f" - {item['name']} x{item['quantity']}")
+    print("==========================\n")
+
+def print_bill_request(table_name, timestamp):
+    print("##########################")
+    print("    BILL REQUEST")
+    print(f"Table: {table_name}")
+    print(f"Time: {timestamp}")
+    print("##########################\n")
 
 if __name__ == '__main__':
-    try:
-        # Connect to the standalone socket server
-        sio.connect('http://localhost:3001')
-        sio.wait()
-    except Exception as e:
-        print(f"Error: {e}")
+    print("Printer polling service started (PrintJob Mode)...")
+    
+    while True:
+        poll_for_jobs()
+        time.sleep(POLL_INTERVAL)

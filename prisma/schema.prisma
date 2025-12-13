@@ -49,3 +49,11 @@ model OrderItem {
   quantity  Int
   price     Int      // Snapshot of price at time of order
 }
+
+model PrintJob {
+  id        Int      @id @default(autoincrement())
+  type      String   // ORDER, BILL
+  payload   String   // JSON
+  isPrinted Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

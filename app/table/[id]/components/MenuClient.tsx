@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import { placeOrder, requestBill } from '../actions'
-import { socket } from '@/lib/socket'
+// import { socket } from '@/lib/socket'
 import { useRouter } from 'next/navigation'
 
 type Product = {
@@ -36,27 +36,8 @@ export default function MenuClient({
   const router = useRouter()
 
   useEffect(() => {
-    // Connect to socket
-    if (!socket.connected) {
-        socket.connect()
-    }
-
-    // Join table room
-    socket.emit('join_room', `table_${tableId}`)
-
-    // Listen for force refresh (table reset)
-    socket.on('force_refresh', () => {
-        alert('会計が終了しました。トップページへ戻ります。')
-        router.push('/')
-        router.refresh()
-    })
-
-    return () => {
-        socket.off('force_refresh')
-        // We don't necessarily disconnect here to keep connection alive if navigating within app, 
-        // but for this specific page it's fine.
-        // socket.disconnect() 
-    }
+    // Socket logic removed
+    // We can rely on router.refresh() or manual reload if needed if the table status changes externally
   }, [tableId, router])
 
   const categories = Array.from(new Set(products.map(p => p.category)))
@@ -112,7 +93,7 @@ export default function MenuClient({
       quantity
     }))
     await placeOrder(tableId, items)
-    socket.emit('order_placed', { tableId, type: 'order' })
+    // socket.emit('order_placed', { tableId, type: 'order' })
     setCart({})
     setIsCartOpen(false)
     alert('注文が完了しました！')
@@ -121,7 +102,7 @@ export default function MenuClient({
   const handleRequestBill = async () => {
     if (confirm('お会計をお願いしますか？')) {
       await requestBill(tableId)
-      socket.emit('order_placed', { tableId, type: 'bill_request' })
+      // socket.emit('order_placed', { tableId, type: 'bill_request' })
       setBillRequested(true)
       setShowSuccessModal(true)
       // Auto close success modal after 3 seconds
@@ -243,96 +224,99 @@ export default function MenuClient({
         </ul>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 pb-24 md:pl-0">
-        <div className="p-4">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
-             {categoryOrder.includes(selectedCategory) ? selectedCategory : 'その他'}
-          </h2>
-          <div className="grid grid-cols-1 gap-4">
-            {filteredProducts.map(product => (
-              <div key={product.id} className={`bg-white rounded-xl shadow-sm p-3 flex ${product.isSoldOut ? 'opacity-60 grayscale' : ''}`}>
-                {product.imageUrl ? (
-                  <img src={product.imageUrl} alt={product.name} className="w-28 h-28 object-cover rounded-lg mr-4 flex-shrink-0" />
-                ) : (
-                  <div className="w-28 h-28 bg-gray-200 rounded-lg mr-4 flex-shrink-0 flex items-center justify-center text-gray-400">No Image</div>
-                )}
-                <div className="flex-1 flex flex-col justify-between py-1">
-                    <div>
-                      <h3 className="font-bold text-lg text-gray-800 leading-tight mb-1">{product.name}</h3>
-                      <p className="text-orange-600 font-bold">
-                        ¥{product.price.toLocaleString()} 
-                        <span className="text-sm text-gray-500 font-normal ml-1">
-                            / {product.quantityStep}{product.unit}
-                        </span>
-                      </p>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {product.calories !== null && <span className="mr-2">🔥 {product.calories} kcal</span>}
-                        {product.alcoholContent !== null && product.alcoholContent > 0 && <span>🍷 {product.alcoholContent} mg</span>}
-                      </div>
-                    </div>
-                  
-                  {product.isSoldOut ? (
-                    <span className="text-red-500 font-bold text-sm bg-red-50 px-2 py-1 rounded self-start">売り切れ</span>
+      {/* Right Side Wrapper */}
+      <div className="flex-1 relative flex flex-col overflow-hidden">
+        {/* Main Content */}
+        <div className="flex-1 overflow-y-auto bg-gray-50 pb-24 md:pl-0">
+          <div className="p-4">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+               {categoryOrder.includes(selectedCategory) ? selectedCategory : 'その他'}
+            </h2>
+            <div className="grid grid-cols-1 gap-4">
+              {filteredProducts.map(product => (
+                <div key={product.id} className={`bg-white rounded-xl shadow-sm p-3 flex ${product.isSoldOut ? 'opacity-60 grayscale' : ''}`}>
+                  {product.imageUrl ? (
+                    <img src={product.imageUrl} alt={product.name} className="w-28 h-28 object-cover rounded-lg mr-4 flex-shrink-0" />
                   ) : (
-                    <div className="flex justify-end mt-2">
-                      {cart[product.id] ? (
-                        <div className="flex items-center bg-orange-50 rounded-full border border-orange-200 shadow-sm">
-                          <button onClick={() => removeFromCart(product.id)} className="w-8 h-8 flex items-center justify-center text-gray-600 font-bold hover:bg-orange-100 rounded-full transition-colors">-</button>
-                          <span className="px-2 font-bold text-gray-800 min-w-[3rem] text-center">
-                            {cart[product.id] * product.quantityStep}{product.unit}
-                          </span>
-                          <button onClick={() => addToCart(product.id)} className="w-8 h-8 flex items-center justify-center text-orange-600 font-bold hover:bg-orange-100 rounded-full transition-colors">+</button>
-                        </div>
-                      ) : (
-                        <button 
-                          onClick={() => addToCart(product.id)} 
-                          className="px-6 py-2 bg-orange-500 text-white rounded-full text-sm font-bold shadow-md hover:bg-orange-600 transition-colors active:scale-95"
-                        >
-                          追加
-                        </button>
-                      )}
-                    </div>
+                    <div className="w-28 h-28 bg-gray-200 rounded-lg mr-4 flex-shrink-0 flex items-center justify-center text-gray-400">No Image</div>
                   )}
+                  <div className="flex-1 flex flex-col justify-between py-1">
+                      <div>
+                        <h3 className="font-bold text-lg text-gray-800 leading-tight mb-1">{product.name}</h3>
+                        <p className="text-orange-600 font-bold">
+                          ¥{product.price.toLocaleString()} 
+                          <span className="text-sm text-gray-500 font-normal ml-1">
+                              / {product.quantityStep}{product.unit}
+                          </span>
+                        </p>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {product.calories !== null && <span className="mr-2">🔥 {product.calories} kcal</span>}
+                          {product.alcoholContent !== null && product.alcoholContent > 0 && <span>🍷 {product.alcoholContent} mg</span>}
+                        </div>
+                      </div>
+                    
+                    {product.isSoldOut ? (
+                      <span className="text-red-500 font-bold text-sm bg-red-50 px-2 py-1 rounded self-start">売り切れ</span>
+                    ) : (
+                      <div className="flex justify-end mt-2">
+                        {cart[product.id] ? (
+                          <div className="flex items-center bg-orange-50 rounded-full border border-orange-200 shadow-sm">
+                            <button onClick={() => removeFromCart(product.id)} className="w-8 h-8 flex items-center justify-center text-gray-600 font-bold hover:bg-orange-100 rounded-full transition-colors">-</button>
+                            <span className="px-2 font-bold text-gray-800 min-w-[3rem] text-center">
+                              {cart[product.id] * product.quantityStep}{product.unit}
+                            </span>
+                            <button onClick={() => addToCart(product.id)} className="w-8 h-8 flex items-center justify-center text-orange-600 font-bold hover:bg-orange-100 rounded-full transition-colors">+</button>
+                          </div>
+                        ) : (
+                          <button 
+                            onClick={() => addToCart(product.id)} 
+                            className="px-6 py-2 bg-orange-500 text-white rounded-full text-sm font-bold shadow-md hover:bg-orange-600 transition-colors active:scale-95"
+                          >
+                            追加
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
-          
-          <div className="mt-8 pt-6 border-t border-gray-200">
-             <button
-               onClick={handleRequestBill}
-               disabled={billRequested}
-               className={`w-full py-4 rounded-xl font-bold text-lg shadow-sm transition-colors ${
-                 billRequested 
-                   ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                   : 'bg-white text-gray-800 border-2 border-orange-500 text-orange-600 hover:bg-orange-50'
-               }`}
-             >
-               {billRequested ? '会計呼出済み' : 'レジにて会計をお願いします'}
-             </button>
-             <p className="text-center text-gray-400 text-xs mt-2">
-               ※ボタンを押すと店員がテーブルまで伺います
-             </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Floating Cart Button */}
-      {totalItems > 0 && (
-        <div className="fixed bottom-6 left-4 right-4 z-40">
-          <button 
-            onClick={() => setIsCartOpen(true)}
-            className="w-full bg-gray-900 text-white p-4 rounded-full shadow-xl flex justify-between items-center transform transition-transform active:scale-95"
-          >
-            <div className="flex items-center">
-              <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full mr-3 min-w-[1.5rem]">{totalItems}</span>
-              <span className="font-bold">カートを見る</span>
+              ))}
             </div>
-            <span className="font-bold text-lg">¥{totalAmount.toLocaleString()}</span>
-          </button>
+            
+            <div className="mt-8 pt-6 border-t border-gray-200">
+               <button
+                 onClick={handleRequestBill}
+                 disabled={billRequested}
+                 className={`w-full py-4 rounded-xl font-bold text-lg shadow-sm transition-colors ${
+                   billRequested 
+                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                     : 'bg-white text-gray-800 border-2 border-orange-500 text-orange-600 hover:bg-orange-50'
+                 }`}
+               >
+                 {billRequested ? '会計呼出済み' : 'レジにて会計をお願いします'}
+               </button>
+               <p className="text-center text-gray-400 text-xs mt-2">
+                 ※ボタンを押すと店員がテーブルまで伺います
+               </p>
+            </div>
+          </div>
         </div>
-      )}
+
+        {/* Floating Cart Button */}
+        {totalItems > 0 && (
+          <div className="absolute bottom-6 left-4 right-4 z-40">
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="w-full bg-gray-900 text-white p-4 rounded-full shadow-xl flex justify-between items-center transform transition-transform active:scale-95"
+            >
+              <div className="flex items-center">
+                <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full mr-3 min-w-[1.5rem]">{totalItems}</span>
+                <span className="font-bold">カートを見る</span>
+              </div>
+              <span className="font-bold text-lg">¥{totalAmount.toLocaleString()}</span>
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Success Modal */}
       {showSuccessModal && (

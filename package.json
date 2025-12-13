@@ -6,28 +6,23 @@
     "dev": "bun --watch server.ts",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "socket": "bun socket-server.ts"
+    "lint": "next lint"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "@types/sharp": "^0.32.0",
-    "next": "16.0.7",
-    "react": "19.2.0",
-    "react-dom": "19.2.0",
-    "sharp": "^0.34.5",
-    "socket.io": "^4.8.1",
-    "socket.io-client": "^4.8.1"
+    "next": "15.0.3",
+    "react": "19.0.0-rc-66855b96-20241106",
+    "react-dom": "19.0.0-rc-66855b96-20241106",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/express": "^5.0.6",
     "@types/node": "^20.19.25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.0.7",
-    "express": "^5.2.1",
+    "eslint-config-next": "15.0.3",
     "prisma": "^5.22.0",
     "tailwindcss": "^4",
     "typescript": "^5"
