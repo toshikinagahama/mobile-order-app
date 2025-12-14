@@ -19,23 +19,23 @@ export default async function ProductsPage() {
         <form action={addProduct} className="space-y-4 sm:flex sm:space-y-0 sm:space-x-4 items-end">
           <div className="flex-grow">
             <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
-            <input type="text" name="name" id="name" required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+            <input type="text" name="name" id="name" required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 text-gray-900" />
           </div>
           <div>
             <label htmlFor="price" className="block text-sm font-medium text-gray-700">Price</label>
-            <input type="number" name="price" id="price" required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+            <input type="number" name="price" id="price" required className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 text-gray-900" />
           </div>
           <div>
             <label htmlFor="calories" className="block text-sm font-medium text-gray-700">Kcal</label>
-            <input type="number" name="calories" id="calories" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+            <input type="number" name="calories" id="calories" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 text-gray-900" />
           </div>
           <div>
             <label htmlFor="alcoholContent" className="block text-sm font-medium text-gray-700">Alc (mg)</label>
-            <input type="number" step="0.1" name="alcoholContent" id="alcoholContent" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+            <input type="number" step="0.1" name="alcoholContent" id="alcoholContent" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 text-gray-900" />
           </div>
           <div>
             <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
-            <select name="category" id="category" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2">
+            <select name="category" id="category" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 text-gray-900">
               {existingCategories.map(cat => (
                 <option key={cat} value={cat}>{cat}</option>
               ))}
@@ -44,21 +44,21 @@ export default async function ProductsPage() {
                 type="text" 
                 name="newCategory" 
                 placeholder="Or create new..." 
-                className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-gray-50" 
+                className="mt-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 bg-gray-50 text-gray-900" 
             />
           </div>
           <div>
             <label htmlFor="unit" className="block text-sm font-medium text-gray-700">Unit</label>
-            <input type="text" name="unit" id="unit" placeholder="点" defaultValue="点" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+            <input type="text" name="unit" id="unit" placeholder="点" defaultValue="点" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 text-gray-900" />
           </div>
           <div>
             <label htmlFor="quantityStep" className="block text-sm font-medium text-gray-700">Step</label>
-            <input type="number" name="quantityStep" id="quantityStep" defaultValue="1" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" />
+            <input type="number" name="quantityStep" id="quantityStep" defaultValue="1" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 text-gray-900" />
           </div>
           <div className="flex-grow">
             <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700">Image (URL or File)</label>
             <div className="space-y-2">
-                <input type="text" name="imageUrl" id="imageUrl" className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2" placeholder="https://..." />
+                <input type="text" name="imageUrl" id="imageUrl" className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm border p-2 text-gray-900" placeholder="https://..." />
                 <div className="text-xs text-center text-gray-500">- OR -</div>
                 <input type="file" name="imageFile" accept="image/*" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" />
             </div>

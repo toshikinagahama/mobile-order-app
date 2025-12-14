@@ -48,6 +48,7 @@ model OrderItem {
   product   Product  @relation(fields: [productId], references: [id])
   quantity  Int
   price     Int      // Snapshot of price at time of order
+  isDelivered Boolean @default(false)
 }
 
 model PrintJob {

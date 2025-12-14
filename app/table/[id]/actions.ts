@@ -6,19 +6,13 @@ import { revalidatePath } from 'next/cache'
 export async function placeOrder(tableId: number, items: { productId: number; quantity: number }[]) {
   if (items.length === 0) return
 
-  // Check if there is an active order
-  let order = await prisma.order.findFirst({
-    where: { tableId, status: 'PENDING' }
+  // Create a new Order (Batch) for every submission
+  const order = await prisma.order.create({
+    data: {
+      tableId,
+      status: 'PENDING',
+    }
   })
-
-  if (!order) {
-    order = await prisma.order.create({
-      data: {
-        tableId,
-        status: 'PENDING',
-      }
-    })
-  }
 
   // Add items
   // We need to get current prices
@@ -74,13 +68,20 @@ export async function placeOrder(tableId: number, items: { productId: number; qu
 }
 
 export async function requestBill(tableId: number) {
-  const order = await prisma.order.findFirst({
-    where: { tableId, status: 'PENDING' }
+  // Find all active orders (PENDING or DELIVERED)
+  const orders = await prisma.order.findMany({
+    where: { 
+        tableId, 
+        status: { in: ['PENDING', 'DELIVERED'] } // New status DELIVERED
+    }
   })
 
-  if (order) {
-    await prisma.order.update({
-      where: { id: order.id },
+  if (orders.length > 0) {
+    // Update all to BILL_REQUESTED
+    await prisma.order.updateMany({
+      where: { 
+          id: { in: orders.map(o => o.id) } 
+      },
       data: { status: 'BILL_REQUESTED' }
     })
 
@@ -90,7 +91,8 @@ export async function requestBill(tableId: number) {
       data: {
         type: 'BILL',
         payload: JSON.stringify({
-          tableName: table?.name || `Table ${tableId}`
+          tableName: table?.name || `Table ${tableId}`,
+          orderCount: orders.length
         })
       }
     })

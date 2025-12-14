@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { placeOrder, requestBill } from '../actions'
 // import { socket } from '@/lib/socket'
 import { useRouter } from 'next/navigation'
+import { getOrderHistory } from '../history-actions'
 
 type Product = {
   id: number
@@ -33,6 +34,8 @@ export default function MenuClient({
   const [billRequested, setBillRequested] = useState(initialBillRequested)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [orderHistory, setOrderHistory] = useState<any[]>([])
   const router = useRouter()
 
   useEffect(() => {
@@ -97,7 +100,17 @@ export default function MenuClient({
     setCart({})
     setIsCartOpen(false)
     alert('注文が完了しました！')
+    // Refresh history
+    const history = await getOrderHistory(tableId)
+    setOrderHistory(history)
   }
+
+  // Load history when component mounts or history drawer opens
+  useEffect(() => {
+    if (isHistoryOpen) {
+        getOrderHistory(tableId).then(setOrderHistory)
+    }
+  }, [isHistoryOpen, tableId])
 
   const handleRequestBill = async () => {
     if (confirm('お会計をお願いしますか？')) {
@@ -137,7 +150,7 @@ export default function MenuClient({
                   </div>
                     <div className="flex items-center bg-gray-100 rounded-lg p-1">
                      <button onClick={() => removeFromCart(product!.id)} className="w-8 h-8 flex items-center justify-center text-gray-600 font-bold">-</button>
-                     <span className="mx-2 font-medium min-w-[3rem] text-center">
+                     <span className="mx-2 font-medium min-w-[3rem] text-center text-gray-900">
                         {quantity * product!.quantityStep}{product!.unit}
                      </span>
                      <button onClick={() => addToCart(product!.id)} className="w-8 h-8 flex items-center justify-center text-orange-600 font-bold">+</button>
@@ -203,6 +216,15 @@ export default function MenuClient({
              </button>
          </div>
 
+        <div className="px-4 pb-4">
+            <button 
+                onClick={() => setIsHistoryOpen(true)}
+                className="w-full bg-indigo-600 text-white py-2 rounded-lg font-bold shadow-md hover:bg-indigo-700 transition-colors mb-4"
+            >
+                注文履歴
+            </button>
+        </div>
+
         <ul className="py-2 overflow-y-auto h-full">
           {categories.map(category => (
             <li key={category}>
@@ -234,7 +256,7 @@ export default function MenuClient({
             </h2>
             <div className="grid grid-cols-1 gap-4">
               {filteredProducts.map(product => (
-                <div key={product.id} className={`bg-white rounded-xl shadow-sm p-3 flex ${product.isSoldOut ? 'opacity-60 grayscale' : ''}`}>
+                <div key={product.id} className={`rounded-xl shadow-sm p-3 flex ${product.isSoldOut ? 'bg-gray-100 opacity-60 grayscale' : 'bg-white'}`}>
                   {product.imageUrl ? (
                     <img src={product.imageUrl} alt={product.name} className="w-28 h-28 object-cover rounded-lg mr-4 flex-shrink-0" />
                   ) : (
@@ -282,22 +304,7 @@ export default function MenuClient({
               ))}
             </div>
             
-            <div className="mt-8 pt-6 border-t border-gray-200">
-               <button
-                 onClick={handleRequestBill}
-                 disabled={billRequested}
-                 className={`w-full py-4 rounded-xl font-bold text-lg shadow-sm transition-colors ${
-                   billRequested 
-                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                     : 'bg-white text-gray-800 border-2 border-orange-500 text-orange-600 hover:bg-orange-50'
-                 }`}
-               >
-                 {billRequested ? '会計呼出済み' : 'レジにて会計をお願いします'}
-               </button>
-               <p className="text-center text-gray-400 text-xs mt-2">
-                 ※ボタンを押すと店員がテーブルまで伺います
-               </p>
-            </div>
+            {/* Bill request section removed */}
           </div>
         </div>
 
@@ -325,6 +332,52 @@ export default function MenuClient({
             <span className="text-2xl mr-3">🙆‍♀️</span>
             <span className="font-bold text-lg">店員を呼び出しました</span>
           </div>
+        </div>
+      )}
+
+      {/* Order History Drawer */}
+      {isHistoryOpen && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+           <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setIsHistoryOpen(false)}></div>
+           <div className="relative w-full max-w-md bg-white h-full shadow-xl flex flex-col animate-slide-in-right">
+              <div className="p-4 border-b flex justify-between items-center bg-indigo-50">
+                  <h2 className="text-xl font-bold text-gray-800">注文履歴</h2>
+                  <button onClick={() => setIsHistoryOpen(false)} className="text-gray-500">閉じる</button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                  {orderHistory.length === 0 ? (
+                      <p className="text-center text-gray-500 py-8">注文履歴はありません</p>
+                  ) : (
+                      orderHistory.map((order) => (
+                          <div key={order.id} className="border rounded-lg p-4 shadow-sm bg-white">
+                              <div className="flex justify-between items-center mb-2 border-b pb-2">
+                                  <span className="text-sm text-gray-500">
+                                      {new Date(order.createdAt).toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                  </span>
+                                  {/* Order level status hidden in favor of item level, or shown as summary */}
+                              </div>
+                              <ul className="space-y-2">
+                                  {order.items.map((item: any) => (
+                                      <li key={item.id} className="flex justify-between items-center text-sm">
+                                          <div className="flex items-center">
+                                              <span className="text-gray-800 mr-2">{item.product.name}</span>
+                                              <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                                  item.isDelivered 
+                                                      ? 'bg-green-100 text-green-800' 
+                                                      : 'bg-orange-100 text-orange-800'
+                                              }`}>
+                                                  {item.isDelivered ? '到着済み' : '調理中'}
+                                              </span>
+                                          </div>
+                                          <span className="font-medium">x{item.quantity}</span>
+                                      </li>
+                                  ))}
+                              </ul>
+                          </div>
+                      ))
+                  )}
+              </div>
+           </div>
         </div>
       )}
     </div>

@@ -4,7 +4,7 @@ WORKDIR /app
 
 # Install dependencies
 FROM base AS deps
-COPY package.json package-lock.json* ./
+COPY package.json ./
 COPY prisma ./prisma
 # Use npm install since we might not have a lockfile matching strict versions yet
 RUN npm install
@@ -48,7 +48,7 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-USER nextjs
+# USER nextjs
 
 EXPOSE 3000
 

@@ -25,10 +25,17 @@ async function main() {
     { name: 'コーラ', price: 350, category: 'ドリンク', calories: 150, alcoholContent: 0, unit: '杯', quantityStep: 1 },
     { name: 'オレンジジュース', price: 350, category: 'ドリンク', calories: 120, alcoholContent: 0, unit: '杯', quantityStep: 1 },
     { name: 'ジンジャーエール', price: 350, category: 'ドリンク', calories: 140, alcoholContent: 0, unit: '杯', quantityStep: 1 },
+    { name: 'アイスコーヒー', price: 400, category: 'ドリンク', calories: 10, alcoholContent: 0, unit: '杯', quantityStep: 1 },
+    { name: 'ホットコーヒー', price: 400, category: 'ドリンク', calories: 10, alcoholContent: 0, unit: '杯', quantityStep: 1 },
+    { name: 'アイスティー', price: 400, category: 'ドリンク', calories: 5, alcoholContent: 0, unit: '杯', quantityStep: 1 },
+    { name: 'ホットティー', price: 400, category: 'ドリンク', calories: 5, alcoholContent: 0, unit: '杯', quantityStep: 1 },
 
     // Alcohol
-    { name: '生ビール', price: 550, category: 'アルコール', calories: 200, alcoholContent: 5, unit: '杯', quantityStep: 1 },
+    { name: '生ビール（350ml）', price: 450, category: 'アルコール', calories: 140, alcoholContent: 5, unit: '杯', quantityStep: 1 },
+    { name: '生ビール（500ml）', price: 650, category: 'アルコール', calories: 200, alcoholContent: 5, unit: '杯', quantityStep: 1 },
     { name: 'ハイボール', price: 500, category: 'アルコール', calories: 150, alcoholContent: 7, unit: '杯', quantityStep: 1 },
+    { name: 'メガハイボール', price: 800, category: 'アルコール', calories: 300, alcoholContent: 7, unit: '杯', quantityStep: 1 },
+    { name: 'ハイボール（濃）', price: 550, category: 'アルコール', calories: 150, alcoholContent: 9, unit: '杯', quantityStep: 1 },
     { name: 'レモンサワー', price: 480, category: 'アルコール', calories: 180, alcoholContent: 5, unit: '杯', quantityStep: 1 },
     { name: '梅酒', price: 500, category: 'アルコール', calories: 250, alcoholContent: 12, unit: '杯', quantityStep: 1 },
     
@@ -37,6 +44,9 @@ async function main() {
     { name: '冷奴', price: 300, category: 'スピード', calories: 100, alcoholContent: 0, unit: '皿', quantityStep: 1 },
     { name: 'キムチ', price: 350, category: 'スピード', calories: 40, alcoholContent: 0, unit: '皿', quantityStep: 1 },
     { name: 'たこわさ', price: 380, category: 'スピード', calories: 60, alcoholContent: 0, unit: '皿', quantityStep: 1 },
+    { name: '納豆', price: 300, category: 'スピード', calories: 90, alcoholContent: 0, unit: '皿', quantityStep: 1 },
+    { name: 'もずく', price: 300, category: 'スピード', calories: 20, alcoholContent: 0, unit: '皿', quantityStep: 1 },
+    { name: 'めかぶ', price: 300, category: 'スピード', calories: 20, alcoholContent: 0, unit: '皿', quantityStep: 1 },
 
     // Appetizer (Otsumami)
     { name: '唐揚げ', price: 580, category: 'おつまみ', calories: 450, alcoholContent: 0, unit: '皿', quantityStep: 1 },
@@ -47,6 +57,8 @@ async function main() {
     // Vegetable
     { name: 'シーザーサラダ', price: 680, category: '野菜', calories: 350, alcoholContent: 0, unit: '皿', quantityStep: 1 },
     { name: 'トマトスライス', price: 400, category: '野菜', calories: 50, alcoholContent: 0, unit: '皿', quantityStep: 1 },
+    { name: 'ブロッコリー盛り', price: 450, category: '野菜', calories: 60, alcoholContent: 0, unit: '皿', quantityStep: 1 },
+    { name: 'レタス', price: 400, category: '野菜', calories: 30, alcoholContent: 0, unit: '皿', quantityStep: 1 },
     
     // Meat
     { name: '牛ハラミ焼き', price: 980, category: '肉', calories: 500, alcoholContent: 0, unit: '皿', quantityStep: 1 },
@@ -65,6 +77,8 @@ async function main() {
 
     // Noodle
     { name: '醤油ラーメン', price: 800, category: '麺', calories: 500, alcoholContent: 0, unit: '杯', quantityStep: 1 },
+    { name: '辛みそきん', price: 900, category: '麺', calories: 600, alcoholContent: 0, unit: '杯', quantityStep: 1 },
+    { name: 'かけうどん', price: 600, category: '麺', calories: 400, alcoholContent: 0, unit: '杯', quantityStep: 1 },
     { name: '焼きそば', price: 700, category: '麺', calories: 550, alcoholContent: 0, unit: '皿', quantityStep: 1 },
 
     // Dessert
